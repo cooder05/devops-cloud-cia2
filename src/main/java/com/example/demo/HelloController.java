@@ -9,7 +9,7 @@ public class HelloController {
 
     @GetMapping("/")
     public String home() {
-        return "Hello from Azure CI/CD! Version 1";
+        return "Hello from Azure CI/CD! Version 2";
     }
 
     @GetMapping("/health")
