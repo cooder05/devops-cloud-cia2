@@ -1,0 +1,79 @@
+
+name: Java CI/CD to Azure AKS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: java-cicd-demo
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Build and test with Maven
+        run: mvn -B clean verify
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to Azure Container Registry
+        env:
+          ACR_NAME: ${{ secrets.ACR_NAME }}
+        run: az acr login --name "$ACR_NAME"
+
+      - name: Build and push Docker image
+        env:
+          ACR_NAME: ${{ secrets.ACR_NAME }}
+        run: |
+          ACR_SERVER=$(az acr show \
+            --name "$ACR_NAME" \
+            --query loginServer \
+            --output tsv)
+
+          IMAGE="$ACR_SERVER/$IMAGE_NAME:${GITHUB_SHA}"
+
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group "${{ secrets.AKS_RESOURCE_GROUP }}" \
+            --name "${{ secrets.AKS_CLUSTER_NAME }}" \
+            --admin \
+            --overwrite-existing
+
+      - name: Deploy to AKS
+        run: |
+          sed "s|IMAGE_PLACEHOLDER|$IMAGE|g" \
+            k8s/deployment.yaml > /tmp/deployment.yaml
+
+          kubectl apply -f /tmp/deployment.yaml
+
+          kubectl rollout status deployment/java-cicd-demo \
+            --timeout=180s
+
+      - name: Verify deployment
+        run: |
+          kubectl get deployments
+          kubectl get pods
+          kubectl get services
