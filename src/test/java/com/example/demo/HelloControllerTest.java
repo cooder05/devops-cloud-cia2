@@ -23,7 +23,7 @@ class HelloControllerTest {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(
-                        "Hello from Azure CI/CD! Version 1"));
+                        "Hello from Azure CI/CD! Version 2"));
     }
 
     @Test
