@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app">
+        <header class="header">
+            <div>
+                <h1>My Calendar</h1>
+                <p>Organize your days, one event at a time.</p>
+            </div>
+            <button id="todayBtn" class="today-btn">Today</button>
+        </header>
+
+        <main class="calendar-layout">
+
+            <section class="calendar-panel">
+                <div class="calendar-header">
+                    <h2 id="monthYear"></h2>
+
+                    <div class="navigation">
+                        <button id="prevMonth" aria-label="Previous month">&lt;</button>
+                        <button id="nextMonth" aria-label="Next month">&gt;</button>
+                    </div>
+                </div>
+
+                <div class="calendar-grid">
+                    <div class="day-name">Sun</div>
+                    <div class="day-name">Mon</div>
+                    <div class="day-name">Tue</div>
+                    <div class="day-name">Wed</div>
+                    <div class="day-name">Thu</div>
+                    <div class="day-name">Fri</div>
+                    <div class="day-name">Sat</div>
+                </div>
+
+                <div id="calendarDays" class="calendar-grid days-grid"></div>
+            </section>
+
+            <aside class="events-panel">
+                <div class="events-header">
+                    <div>
+                        <h2 id="selectedDateTitle">Selected Date</h2>
+                        <p id="eventCount">0 events</p>
+                    </div>
+                    <button id="addEventBtn" class="add-btn">+ Add Event</button>
+                </div>
+
+                <div id="eventsList" class="events-list">
+                    <p class="empty-message">No events for this day.</p>
+                </div>
+            </aside>
+
+        </main>
+    </div>
+
+    <!-- Add Event Modal -->
+    <div id="eventModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Event</h2>
+                <button id="closeModal" class="close-btn">&times;</button>
+            </div>
+
+            <form id="eventForm">
+                <label for="eventTitle">Event title</label>
+                <input
+                    type="text"
+                    id="eventTitle"
+                    placeholder="e.g. Project meeting"
+                    required
+                    maxlength="60"
+                >
+
+                <label for="eventDate">Date</label>
+                <input type="date" id="eventDate" required>
+
+                <label for="eventTime">Time</label>
+                <input type="time" id="eventTime">
+
+                <label for="eventDescription">Description</label>
+                <textarea
+                    id="eventDescription"
+                    placeholder="Add some details..."
+                    rows="3"
+                ></textarea>
+
+                <label for="eventColor">Event color</label>
+                <select id="eventColor">
+                    <option value="blue">Blue</option>
+                    <option value="purple">Purple</option>
+                    <option value="green">Green</option>
+                    <option value="orange">Orange</option>
+                    <option value="red">Red</option>
+                </select>
+
+                <div class="form-actions">
+                    <button type="button" id="cancelEvent" class="cancel-btn">
+                        Cancel
+                    </button>
+                    <button type="submit" class="save-btn">
+                        Save Event
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

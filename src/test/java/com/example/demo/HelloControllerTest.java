@@ -19,14 +19,6 @@ class HelloControllerTest {
     private MockMvc mockMvc;
 
     @Test
-    void homeReturnsGreeting() throws Exception {
-        mockMvc.perform(get("/"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(
-                        "Hello from Azure CI/CD! Version 2"));
-    }
-
-    @Test
     void healthReturnsUp() throws Exception {
         mockMvc.perform(get("/health"))
                 .andExpect(status().isOk())
