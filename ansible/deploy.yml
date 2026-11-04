@@ -8,16 +8,15 @@
   vars:
     namespace: default
     deployment_name: java-cicd-demo
-    container_name: java-cicd-demo
     service_name: java-cicd-demo-service
-    image_name: "{{ lookup('env', 'IMAGE') }}"
+    manifest_path: /tmp/deployment.yaml
 
   tasks:
 
     - name: Validate Docker image name
       ansible.builtin.assert:
         that:
-          - image_name | length > 0
+          - lookup('env', 'IMAGE') | length > 0
         fail_msg: "IMAGE environment variable is not set."
 
     - name: Check AKS connectivity
@@ -25,15 +24,26 @@
         cmd: kubectl cluster-info
       changed_when: false
 
-    - name: Update Kubernetes deployment image
+    - name: Check generated Kubernetes manifest
+      ansible.builtin.stat:
+        path: "{{ manifest_path }}"
+      register: manifest_file
+
+    - name: Validate generated manifest
+      ansible.builtin.assert:
+        that:
+          - manifest_file.stat.exists
+          - manifest_file.stat.size > 0
+        fail_msg: "Kubernetes deployment manifest is missing or empty."
+
+    - name: Apply Kubernetes deployment manifest
       ansible.builtin.command:
         argv:
           - kubectl
-          - set
-          - image
-          - "deployment/{{ deployment_name }}"
-          - "{{ container_name }}={{ image_name }}"
-          - "--namespace"
+          - apply
+          - -f
+          - "{{ manifest_path }}"
+          - --namespace
           - "{{ namespace }}"
 
     - name: Wait for deployment rollout

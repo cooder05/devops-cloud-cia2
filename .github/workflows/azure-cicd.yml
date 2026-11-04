@@ -17,12 +17,14 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Scan repository for secrets using Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -67,12 +69,16 @@ jobs:
             --admin \
             --overwrite-existing
 
-      - name: Install Ansible
+      - name: Prepare Kubernetes deployment manifest
         run: |
-          pip install ansible
+          sed "s|IMAGE_PLACEHOLDER|$IMAGE|g" \
+            k8s/deployment.yaml > /tmp/deployment.yaml
+
+      - name: Display generated deployment manifest
+        run: cat /tmp/deployment.yaml
+
+      - name: Install Ansible
+        run: pip install ansible
 
       - name: Deploy to AKS using Ansible
-        env:
-          IMAGE_NAME: ${{ env.IMAGE }}
-        run: |
-          ansible-playbook ansible/deploy.yml
+        run: ansible-playbook ansible/deploy.yml
