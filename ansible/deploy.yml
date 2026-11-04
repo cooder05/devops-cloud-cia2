@@ -1,0 +1,96 @@
+
+---
+- name: Deploy Java application to Azure Kubernetes Service
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    namespace: default
+    deployment_name: java-cicd-demo
+    container_name: java-cicd-demo
+    service_name: java-cicd-demo-service
+    image_name: "{{ lookup('env', 'IMAGE') }}"
+
+  tasks:
+
+    - name: Validate Docker image name
+      ansible.builtin.assert:
+        that:
+          - image_name | length > 0
+        fail_msg: "IMAGE environment variable is not set."
+
+    - name: Check AKS connectivity
+      ansible.builtin.command:
+        cmd: kubectl cluster-info
+      changed_when: false
+
+    - name: Update Kubernetes deployment image
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - set
+          - image
+          - "deployment/{{ deployment_name }}"
+          - "{{ container_name }}={{ image_name }}"
+          - "--namespace"
+          - "{{ namespace }}"
+
+    - name: Wait for deployment rollout
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - rollout
+          - status
+          - "deployment/{{ deployment_name }}"
+          - "--namespace"
+          - "{{ namespace }}"
+          - "--timeout=180s"
+      changed_when: false
+
+    - name: Retrieve deployment status
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - deployment
+          - "{{ deployment_name }}"
+          - "--namespace"
+          - "{{ namespace }}"
+      register: deployment_status
+      changed_when: false
+
+    - name: Display deployment status
+      ansible.builtin.debug:
+        var: deployment_status.stdout
+
+    - name: Retrieve pod status
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - pods
+          - "--namespace"
+          - "{{ namespace }}"
+      register: pod_status
+      changed_when: false
+
+    - name: Display pod status
+      ansible.builtin.debug:
+        var: pod_status.stdout
+
+    - name: Retrieve service details
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - service
+          - "{{ service_name }}"
+          - "--namespace"
+          - "{{ namespace }}"
+      register: service_status
+      changed_when: false
+
+    - name: Display service details
+      ansible.builtin.debug:
+        var: service_status.stdout

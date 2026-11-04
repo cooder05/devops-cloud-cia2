@@ -62,18 +62,12 @@ jobs:
             --admin \
             --overwrite-existing
 
-      - name: Deploy to AKS
+      - name: Install Ansible
         run: |
-          sed "s|IMAGE_PLACEHOLDER|$IMAGE|g" \
-            k8s/deployment.yaml > /tmp/deployment.yaml
+          pip install ansible
 
-          kubectl apply -f /tmp/deployment.yaml
-
-          kubectl rollout status deployment/java-cicd-demo \
-            --timeout=180s
-
-      - name: Verify deployment
+      - name: Deploy to AKS using Ansible
+        env:
+          IMAGE_NAME: ${{ env.IMAGE }}
         run: |
-          kubectl get deployments
-          kubectl get pods
-          kubectl get services
+          ansible-playbook ansible/deploy.yml
